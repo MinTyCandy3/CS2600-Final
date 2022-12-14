@@ -1,7 +1,22 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <Keypad.h>
 
 #define PIN_LED 2
+
+
+// define the symbols on the buttons of the keypad
+char keys[3][3] = {
+  {'1', '2', '3'},
+  {'4', '5', '6'},
+  {'7', '8', '9'},
+};
+
+byte rowPins[3] = {14, 27, 26}; // connect to the row pinouts of the keypad
+byte colPins[3] = {13, 21, 22};   // connect to the column pinouts of the keypad
+
+// initialize an instance of class NewKeypad
+Keypad myKeypad = Keypad(makeKeymap(keys), rowPins, colPins, 3, 3);
 
 // WiFi
 const char *ssid = "NETGEAR20"; // Enter your WiFi name
@@ -67,17 +82,27 @@ void callback(char *topic, byte *payload, unsigned int length) {
 }
 
 void loop() {
- client.loop();
+  client.loop();
 
- if(player2Input == "YES")
- {
-   digitalWrite(PIN_LED, HIGH);
-   player2Input = "";
- }
+  // Get the character input
+  char keyPressed = myKeypad.getKey();
+  // If there is a character input, sent it to the serial port
+  if (keyPressed) {
+    Serial.println(keyPressed);
+    client.publish(topic, "KEY PRESSED");
+  }
 
- if(player2Input == "NO")
- {
-   digitalWrite(PIN_LED, LOW);
-   player2Input = "";
- }
+  if(player2Input == "YES")
+  {
+    digitalWrite(PIN_LED, HIGH);
+    player2Input = "";
+  }
+
+  if(player2Input == "NO")
+  {
+    digitalWrite(PIN_LED, LOW);
+    player2Input = "";
+  }
+
+  player2Input = "";
 }
