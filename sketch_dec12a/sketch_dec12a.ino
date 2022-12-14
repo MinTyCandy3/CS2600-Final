@@ -1,22 +1,33 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <Keypad.h>
 
-#define PIN_LED 2
+#define LED_BUILTIN1  2
+#define LED_BUILTIN2  0
+#define LED_BUILTIN3  4
+#define LED_BUILTIN4  5
+#define LED_BUILTIN5  23
+#define LED_BUILTIN6  22
+#define LED_BUILTIN7  21
+#define LED_BUILTIN8  19
+#define LED_BUILTIN9  18
+#define LED_BUILTIN10  32
+#define LED_BUILTIN11 33
+#define LED_BUILTIN12 25
+#define LED_BUILTIN13  26
+#define LED_BUILTIN14  27
+#define LED_BUILTIN15  15
+#define LED_BUILTIN16  14
+#define LED_BUILTIN17  12
+#define LED_BUILTIN18  13
 
+#include <Arduino.h>
+#include <IRremoteESP8266.h>
+#include <IRrecv.h>
+#include <IRutils.h>
 
-// define the symbols on the buttons of the keypad
-char keys[3][3] = {
-  {'1', '2', '3'},
-  {'4', '5', '6'},
-  {'7', '8', '9'},
-};
-
-byte rowPins[3] = {14, 27, 26}; // connect to the row pinouts of the keypad
-byte colPins[3] = {13, 21, 22};   // connect to the column pinouts of the keypad
-
-// initialize an instance of class NewKeypad
-Keypad myKeypad = Keypad(makeKeymap(keys), rowPins, colPins, 3, 3);
+const uint16_t recvPin = 34; // Infrared receiving pin
+IRrecv irrecv(recvPin);      // Create a class object used to receive class
+decode_results results;       // Create a decoding results class object
 
 // WiFi
 const char *ssid = "NETGEAR20"; // Enter your WiFi name
@@ -36,7 +47,28 @@ String player2Input;
 
 void setup() {
 
-  pinMode(PIN_LED, OUTPUT);
+  pinMode(LED_BUILTIN1, OUTPUT);
+  pinMode(LED_BUILTIN2, OUTPUT);
+  pinMode(LED_BUILTIN3, OUTPUT);
+  pinMode(LED_BUILTIN4, OUTPUT);
+  pinMode(LED_BUILTIN5, OUTPUT);
+  pinMode(LED_BUILTIN6, OUTPUT);
+  pinMode(LED_BUILTIN7, OUTPUT);
+  pinMode(LED_BUILTIN8, OUTPUT);
+  pinMode(LED_BUILTIN9, OUTPUT);
+  pinMode(LED_BUILTIN10, OUTPUT);
+  pinMode(LED_BUILTIN11, OUTPUT);
+  pinMode(LED_BUILTIN12, OUTPUT);
+  pinMode(LED_BUILTIN13, OUTPUT);
+  pinMode(LED_BUILTIN14, OUTPUT);
+  pinMode(LED_BUILTIN15, OUTPUT);
+  pinMode(LED_BUILTIN16, OUTPUT);
+  pinMode(LED_BUILTIN17, OUTPUT);
+  pinMode(LED_BUILTIN18, OUTPUT);
+
+  irrecv.enableIRIn();        // Start the receiver
+  Serial.print("IRrecvDemo is now running and waiting for IR message on Pin ");
+  Serial.println(recvPin);   //print the infrared receiving pin
 
   // Set software serial baud to 115200;
   Serial.begin(115200);
@@ -84,25 +116,67 @@ void callback(char *topic, byte *payload, unsigned int length) {
 void loop() {
   client.loop();
 
-  // Get the character input
-  char keyPressed = myKeypad.getKey();
-  // If there is a character input, sent it to the serial port
-  if (keyPressed) {
-    Serial.println(keyPressed);
-    client.publish(topic, "KEY PRESSED");
-  }
-
-  if(player2Input == "YES")
-  {
-    digitalWrite(PIN_LED, HIGH);
-    player2Input = "";
-  }
-
-  if(player2Input == "NO")
-  {
-    digitalWrite(PIN_LED, LOW);
-    player2Input = "";
+  if (irrecv.decode(&results)) {          // Waiting for decoding
+    handleControl(results.value);
+    irrecv.resume();                      // Release the IRremote. Receive the next value
   }
 
   player2Input = "";
+}
+
+void handleControl(unsigned long value) {
+  // Handle the commands
+  switch (value) {
+    case 0xFFA25D:              // Receive the Power Button, exit game
+      Serial.println("Pressed the Power Button");
+      digitalWrite(LED_BUILTIN1, LOW);
+      digitalWrite(LED_BUILTIN3, LOW);
+      digitalWrite(LED_BUILTIN5, LOW);
+      digitalWrite(LED_BUILTIN7, LOW);
+      digitalWrite(LED_BUILTIN9, LOW);
+      digitalWrite(LED_BUILTIN11, LOW);
+      digitalWrite(LED_BUILTIN13, LOW);
+      digitalWrite(LED_BUILTIN15, LOW);
+      digitalWrite(LED_BUILTIN17, LOW);
+      break;
+  }
+
+  switch (value) {
+    case 0xFF30CF:              // Receive the number '1'
+      digitalWrite(LED_BUILTIN1, HIGH);
+      Serial.println("Pressed 1");
+      break;
+    case 0xFF18E7:              // Receive the number '2'
+      digitalWrite(LED_BUILTIN3, HIGH);
+      Serial.println("Pressed 2");
+      break;
+    case 0xFF7A85:              // Receive the number '3'
+      digitalWrite(LED_BUILTIN5, HIGH);
+      Serial.println("Pressed 3");
+      break;
+    case 0xFF10EF:              // Receive the number '4'
+      digitalWrite(LED_BUILTIN7, HIGH);
+      Serial.println("Pressed 4");
+      break;
+    case 0xFF38C7:              // Receive the number '2'
+      digitalWrite(LED_BUILTIN9, HIGH);
+      Serial.println("Pressed 5");
+      break;
+    case 0xFF5AA5:              // Receive the number '3'
+      digitalWrite(LED_BUILTIN11, HIGH);
+      Serial.println("Pressed 6");
+      break;
+    case 0xFF42BD:              // Receive the number '1'
+      digitalWrite(LED_BUILTIN13, HIGH);
+      Serial.println("Pressed 7");
+      break;
+    case 0xFF4AB5:              // Receive the number '2'
+      digitalWrite(LED_BUILTIN15, HIGH);
+      Serial.println("Pressed 8");
+      break;
+    case 0xFF52AD:              // Receive the number '3'
+      digitalWrite(LED_BUILTIN17, HIGH);
+      Serial.println("Pressed 9");
+      break;
+  }
 }
