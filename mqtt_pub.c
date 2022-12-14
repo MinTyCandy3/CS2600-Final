@@ -7,7 +7,7 @@
 #define ADDRESS     "tcp://broker.emqx.io:1883"
 #define CLIENTID    "emqx_computer"
 #define TOPIC       "esp32/test"
-#define PAYLOAD     "YES"
+#define PAYLOAD     "q"
 #define QOS         1
 #define TIMEOUT     10000L
 

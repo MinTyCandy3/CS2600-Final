@@ -5,7 +5,7 @@
 #define ADDRESS     "tcp://broker.emqx.io:1883"
 #define CLIENTID    "ExampleClientSub"
 #define TOPIC       "esp32/test"
-#define PAYLOAD     "Hello World!"
+#define PAYLOAD     "q"
 #define QOS         1
 #define TIMEOUT     10000L
 volatile MQTTClient_deliveryToken deliveredtoken;
@@ -40,6 +40,9 @@ int main(int argc, char* argv[])
 {
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
+    MQTTClient_message pubmsg = MQTTClient_message_initializer;
+    MQTTClient_deliveryToken token;
+
     int rc;
     int ch;
     MQTTClient_create(&client, ADDRESS, CLIENTID,
@@ -52,6 +55,19 @@ int main(int argc, char* argv[])
         printf("Failed to connect, return code %d\n", rc);
         exit(EXIT_FAILURE);
     }
+    
+    pubmsg.payload = PAYLOAD;
+    pubmsg.payloadlen = strlen(PAYLOAD);
+    pubmsg.qos = QOS;
+    pubmsg.retained = 0;
+
+    MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
+    printf("Waiting for up to %d seconds for publication of %s\n"
+            "on topic %s for client with ClientID: %s\n",
+            (int)(TIMEOUT/1000), PAYLOAD, TOPIC, CLIENTID);
+    rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
+    printf("Message with delivery token %d delivered\n", token);
+
     printf("Subscribing to topic %s\nfor client %s using QoS%d\n\n"
            "Press Q<Enter> to quit\n\n", TOPIC, CLIENTID, QOS);
     MQTTClient_subscribe(client, TOPIC, QOS);
@@ -59,6 +75,7 @@ int main(int argc, char* argv[])
     {
         ch = getchar();
     } while(ch!='Q' && ch != 'q');
+
     MQTTClient_disconnect(client, 10000);
     MQTTClient_destroy(&client);
     return rc;
