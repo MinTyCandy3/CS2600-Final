@@ -31,6 +31,9 @@ int main(int argc, char* argv[])
         printf("Failed to connect, return code %d\n", rc);
         exit(-1);
     }
+
+    // char[100] buff;
+    
   
     // Publish message
     pubmsg.payload = PAYLOAD;
