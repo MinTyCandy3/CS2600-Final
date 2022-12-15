@@ -47,6 +47,7 @@ PubSubClient client(espClient);
 // TICTACTOE Variables
 String player2Input;
 bool running = false;
+bool ourTurn = true;
 
 void setup() {
 
@@ -118,40 +119,50 @@ void callback(char *topic, byte *payload, unsigned int length) {
   switch(input)
   {
     case 'y':
+      turnOffAll();
       running = true;
       break;
-    case 'q':
-    case 'Q':
-      turnOffAll();
-      break;
-    case '1':
-    digitalWrite(LED_BUILTIN2, HIGH);
-      break;
-    case '2':
-    digitalWrite(LED_BUILTIN4, HIGH);
-      break;
-    case '3':
-    digitalWrite(LED_BUILTIN6, HIGH);
-      break;
-    case '4':
-    digitalWrite(LED_BUILTIN8, HIGH);
-      break;
-    case '5':
-    digitalWrite(LED_BUILTIN10, HIGH);
-      break;
-    case '6':
-    digitalWrite(LED_BUILTIN12, HIGH);
-      break;
-    case '7':
-    digitalWrite(LED_BUILTIN14, HIGH);
-      break;
-    case '8':
-    digitalWrite(LED_BUILTIN16, HIGH);
-      break;
-    case '9':
-    digitalWrite(LED_BUILTIN18, HIGH);
-      break;
-      
+  }
+
+  if(running)
+  {
+    switch(input)
+    {
+      case 'q':
+      case 'Q':
+        running = false;
+        turnOffAll();
+        break;
+      case '1':
+      digitalWrite(LED_BUILTIN2, HIGH);
+        break;
+      case '2':
+      digitalWrite(LED_BUILTIN4, HIGH);
+        break;
+      case '3':
+      digitalWrite(LED_BUILTIN6, HIGH);
+        break;
+      case '4':
+      digitalWrite(LED_BUILTIN8, HIGH);
+        break;
+      case '5':
+      digitalWrite(LED_BUILTIN10, HIGH);
+        break;
+      case '6':
+      digitalWrite(LED_BUILTIN12, HIGH);
+        break;
+      case '7':
+      digitalWrite(LED_BUILTIN14, HIGH);
+        break;
+      case '8':
+      digitalWrite(LED_BUILTIN16, HIGH);
+        break;
+      case '9':
+      digitalWrite(LED_BUILTIN18, HIGH);
+        break;
+        
+    }
+
   }
 
   Serial.println(player2Input);
@@ -215,6 +226,7 @@ void handleControl(unsigned long value) {
     switch (value) {
       case 0xFFA25D:              // Receive the Power Button, exit game
         Serial.println("Pressed the Power Button");
+        running = false;
         turnOffAll();
         break;
     }
