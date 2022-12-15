@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "MQTTClient.h"
 #define DASHES      "---------------\n"
-#define ADDRESS     "tcp://broker.emqx.io:1883"
+#define ADDRESS     "tcp://test.mosquitto.org:1883"
 #define CLIENTID    "Player 2"
 #define TOPIC       "mint/tictactoe"
 #define PAYLOAD     "y"
