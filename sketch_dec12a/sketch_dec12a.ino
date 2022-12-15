@@ -179,6 +179,40 @@ void callback(char *topic, byte *payload, unsigned int length) {
         break;
     }
 
+    // Player 2 / Computer wins
+    if(checkWinStatus(tiles[0], tiles[1], tiles[2], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN2, LED_BUILTIN4, LED_BUILTIN6);
+    }
+    else if(checkWinStatus(tiles[3], tiles[4], tiles[5], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN8, LED_BUILTIN10, LED_BUILTIN12);
+    }
+    else if(checkWinStatus(tiles[6], tiles[7], tiles[8], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN14, LED_BUILTIN16, LED_BUILTIN18);
+    }
+    else if(checkWinStatus(tiles[0], tiles[3], tiles[6], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN2, LED_BUILTIN8, LED_BUILTIN14);
+    }
+    else if(checkWinStatus(tiles[1], tiles[4], tiles[7], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN4, LED_BUILTIN10, LED_BUILTIN16);
+    }
+    else if(checkWinStatus(tiles[2], tiles[5], tiles[8], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN6, LED_BUILTIN12, LED_BUILTIN18);
+    }
+    else if(checkWinStatus(tiles[0], tiles[4], tiles[8], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN2, LED_BUILTIN10, LED_BUILTIN18);
+    }
+    else if(checkWinStatus(tiles[6], tiles[4], tiles[2], 'O'))
+    {
+      turnOnWinningPattern(LED_BUILTIN14, LED_BUILTIN10, LED_BUILTIN6);
+    }
+
   }
 
   Serial.println(player2Input);
@@ -216,7 +250,7 @@ void handleControl(unsigned long value) {
   switch (value) {
     case 0xFFA25D:              // Receive the Power Button, exit game
       endGame();
-      client.publish(topic, "Q");
+      client.publish(topic, "Q1");
       break;
   }
 
@@ -295,8 +329,65 @@ void checkTile(int led, int tileNum)
         client.publish(topic, "91");
         break;
     }
+
     tiles[tileNum-1] = 'X';
+
+    // Player 1 Wins
+    if(checkWinStatus(tiles[0], tiles[1], tiles[2], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN1, LED_BUILTIN3, LED_BUILTIN5);
+    }
+    else if (checkWinStatus(tiles[3], tiles[4], tiles[5], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN7, LED_BUILTIN9, LED_BUILTIN11);
+    }
+    else if (checkWinStatus(tiles[6], tiles[7], tiles[8], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN13, LED_BUILTIN15, LED_BUILTIN17);
+    }
+    else if (checkWinStatus(tiles[0], tiles[3], tiles[6], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN1, LED_BUILTIN7, LED_BUILTIN13);
+    }
+    else if (checkWinStatus(tiles[1], tiles[4], tiles[7], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN3, LED_BUILTIN9, LED_BUILTIN15);
+    }
+    else if (checkWinStatus(tiles[2], tiles[5], tiles[8], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN5, LED_BUILTIN11, LED_BUILTIN17);
+    }
+    else if (checkWinStatus(tiles[0], tiles[4], tiles[8], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN1, LED_BUILTIN9, LED_BUILTIN17);
+    }
+    else if (checkWinStatus(tiles[6], tiles[4], tiles[2], 'X'))
+    {
+      client.publish(topic, "W1");
+      turnOnWinningPattern(LED_BUILTIN13, LED_BUILTIN9, LED_BUILTIN5);
+    }
   }
+}
+
+bool checkWinStatus(char t1, char t2, char t3, char symbol)
+{
+    if(t1 != symbol || t2 != symbol || t3 != symbol)
+    {
+        return false;
+    }
+
+    if(t1 == t2 && t1 == t3 && t2 == t3)
+    {
+        printf("huh");
+        return true;
+    }
 }
 
 void endGame()
@@ -308,6 +399,23 @@ void endGame()
   running = false;
   ourTurn = true;
   turnOffAll();
+}
+
+void turnOnWinningPattern(int led1, int led2, int led3)
+{
+  delay(1000);
+  for(int i = 0; i < 3; i++)
+  {
+    digitalWrite(led1, LOW);
+    digitalWrite(led2, LOW);
+    digitalWrite(led3, LOW);
+    delay(1000);
+    digitalWrite(led1, HIGH);
+    digitalWrite(led2, HIGH);
+    digitalWrite(led3, HIGH);
+    delay(1000);
+  }
+  endGame();
 }
 
 void turnOffAll()
