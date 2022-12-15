@@ -14,11 +14,14 @@ volatile MQTTClient_deliveryToken deliveredtoken;
 
 void printStatus();
 void checkTile(int tile);
+bool checkWinStatus(char t1, char t2, char t3);
 
 // TICTACTOE VARIABLES
 char input[50]; 
 bool ourTurn = false;
 bool endGame = false;
+bool player1Wins = false;
+bool player2Wins = false;
 char tiles[9] = {'_','_','_',  '_','_','_'  ,'_','_','_'};
 
 void delivered(void *context, MQTTClient_deliveryToken dt)
@@ -31,34 +34,16 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 
     int i;
     char* payloadptr;
-
-    // printf(DASHES);
-    // printf("Message arrived\n");
-    // printf("     topic: %s\n", topicName);
-    // printf("   message: ");
-
     payloadptr = message->payload;
-    // char payloadCh = payloadptr[0];
-    // char playerCh = payloadptr[1];
-    char payloadCh[10];
-    // // printf("%c", payloadCh);
-    // for(i=0; i<message->payloadlen; i++)
-    // {
-    //     payloadCh[i] += *payloadptr;
-    //     printf("%c", *payloadptr++);
-    // }
-    // printf("\n");
-    // printf(DASHES);
 
-    // printf("\n%c", payloadCh[0]);
-    // printf("\n%c", payloadCh[1]);
     payloadptr++;
-    
     if(*payloadptr-- == '1')
     {
         switch(*payloadptr)
         {
-            case 'q':
+            case 'W':
+                player1Wins = true;
+                break;
             case 'Q':
                 endGame = true;
                 ourTurn = false;
@@ -150,33 +135,59 @@ int main(int argc, char* argv[])
     MQTTClient_subscribe(client, TOPIC, QOS);
     do
     {
+        if(player2Wins)
+        {
+            printStatus();
+            printf("You win! Good game! Goodbye~");
+
+            pubmsg.payload = input;
+            pubmsg.payloadlen = strlen(input);
+            pubmsg.qos = QOS;
+            pubmsg.retained = 0;
+
+            MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
+            rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
+
+            return 1;
+        }
+
+        if(player1Wins)
+        {
+            printStatus();
+            printf("%s\n","Sorry, Player 1 Wins! Try again next time, goodbye~");
+            return 1;
+        }
+
         if(endGame)
         {
             printf("%s\n","Player 1 ended the game... goodbye!");
+            return 1;
         }
 
         if(!ourTurn)
         {
             printStatus();
-            printf("%s\n","Waiting for Player 1. . . (Press <Enter> to check if it's your turn or <Q> to Quit))");
+            printf("%s\n","Waiting for Player 1. . . (Press <Enter> to check if it's your turn or <Q> to Quit)");
         }
         else
         {
             printStatus();
-            printf("%s\n","It's your turn!. . . (Press <1-9> or <Q> to Quit))");
+            printf("%s\n","It's your turn!. . . (Press <1-9> or <Q> to Quit)");
         }
+
         fflush(stdin);
         fgets(input,sizeof(input),stdin);
 
-        if(ourTurn)
+        if(input[0] == 'q' || input[0] == 'Q')
+        {
+            printf("\nYou Ended The Game... Goodbye!\n");
+            endGame = true;
+        }
+
+        if(ourTurn && !endGame)
         {
             switch(input[0])
             {
-                case 'q':
-                case 'Q':
-                    printf("\nYou Ended The Game... Goodbye!\n");
-                    endGame = true;
-                    break;
                 case '1':
                     checkTile(0);
                     break;
@@ -218,8 +229,6 @@ int main(int argc, char* argv[])
 
         input[1] = '2';
 
-        
-
         pubmsg.payload = input;
         pubmsg.payloadlen = strlen(input);
         pubmsg.qos = QOS;
@@ -227,7 +236,7 @@ int main(int argc, char* argv[])
 
         MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
         rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
-    } while(input[0] != 'Q' && input[0] != 'q');
+    } while((input[0] != 'Q' && input[0] != 'q'));
 
     MQTTClient_disconnect(client, 10000);
     MQTTClient_destroy(&client);
@@ -255,5 +264,34 @@ void checkTile(int tile)
     {
         printf("\nTile is already occupied!\n");
         input[0] = '0';
+    }
+
+    if(
+    checkWinStatus(tiles[0], tiles[1], tiles[2]) ||
+    checkWinStatus(tiles[3], tiles[4], tiles[5]) ||
+    checkWinStatus(tiles[6], tiles[7], tiles[8]) ||
+
+    checkWinStatus(tiles[0], tiles[3], tiles[6]) ||
+    checkWinStatus(tiles[1], tiles[4], tiles[7]) ||
+    checkWinStatus(tiles[2], tiles[5], tiles[8]) ||
+
+    checkWinStatus(tiles[0], tiles[4], tiles[8]) ||
+    checkWinStatus(tiles[6], tiles[4], tiles[2]))
+    {
+        player2Wins = true;
+    }
+}
+
+bool checkWinStatus(char t1, char t2, char t3)
+{
+    if(t1 != 'O' || t2 != 'O' || t3 != 'O')
+    {
+        return false;
+    }
+
+    if(t1 == t2 && t1 == t3 && t2 == t3)
+    {
+        printf("huh");
+        return true;
     }
 }
