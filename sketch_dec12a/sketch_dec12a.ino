@@ -36,7 +36,7 @@ const char *password = "elegantpiano135";  // Enter WiFi password
 
 // MQTT Broker
 const char *mqtt_broker = "broker.emqx.io";
-const char *topic = "esp32/test";
+const char *topic = "mint/tictactoe";
 const char *mqtt_username = "emqx";
 const char *mqtt_password = "public";
 const int mqtt_port = 1883;
@@ -48,6 +48,7 @@ PubSubClient client(espClient);
 String player2Input;
 bool running = false;
 bool ourTurn = true;
+char tiles[9] = {'_','_','_',  '_','_','_'  ,'_','_','_'};
 
 void setup() {
 
@@ -99,7 +100,7 @@ void setup() {
       }
   }
   // publish and subscribe
-  client.publish(topic, "Hi EMQX I'm ESP32 ^^");
+  client.publish(topic, "Hi, I'm Player 1, let's have a good game! ^^");
   client.subscribe(topic);
 }
 
@@ -115,52 +116,67 @@ void callback(char *topic, byte *payload, unsigned int length) {
   }
 
   char input = player2Input.charAt(0);
+  char playerNum = player2Input.charAt(1);
 
   switch(input)
   {
     case 'y':
       turnOffAll();
       running = true;
+      ourTurn = true;
       break;
   }
 
-  if(running)
+  if(running && input == 'q' || input == 'Q')
   {
+    endGame();
+  }
+
+  Serial.printf("PLAYER: %c\n", playerNum);
+  if(running && !ourTurn && playerNum == '2')
+  {
+    ourTurn = true;
     switch(input)
     {
-      case 'q':
-      case 'Q':
-        running = false;
-        turnOffAll();
-        break;
       case '1':
-      digitalWrite(LED_BUILTIN2, HIGH);
+        digitalWrite(LED_BUILTIN2, HIGH);
+        tiles[0] = 'O';
         break;
       case '2':
-      digitalWrite(LED_BUILTIN4, HIGH);
+        digitalWrite(LED_BUILTIN4, HIGH);
+        tiles[1] = 'O';
         break;
       case '3':
-      digitalWrite(LED_BUILTIN6, HIGH);
+        digitalWrite(LED_BUILTIN6, HIGH);
+        tiles[2] = 'O';
         break;
       case '4':
-      digitalWrite(LED_BUILTIN8, HIGH);
+        digitalWrite(LED_BUILTIN8, HIGH);
+        tiles[3] = 'O';
         break;
       case '5':
-      digitalWrite(LED_BUILTIN10, HIGH);
+        digitalWrite(LED_BUILTIN10, HIGH);
+        tiles[4] = 'O';
         break;
       case '6':
-      digitalWrite(LED_BUILTIN12, HIGH);
+        digitalWrite(LED_BUILTIN12, HIGH);
+        tiles[5] = 'O';
         break;
       case '7':
-      digitalWrite(LED_BUILTIN14, HIGH);
+        digitalWrite(LED_BUILTIN14, HIGH);
+        tiles[6] = 'O';
         break;
       case '8':
-      digitalWrite(LED_BUILTIN16, HIGH);
+        digitalWrite(LED_BUILTIN16, HIGH);
+        tiles[7] = 'O';
         break;
       case '9':
-      digitalWrite(LED_BUILTIN18, HIGH);
+        digitalWrite(LED_BUILTIN18, HIGH);
+        tiles[8] = 'O';
         break;
-        
+      default:
+        ourTurn = false;
+        break;
     }
 
   }
@@ -175,40 +191,16 @@ void loop() {
   if(!running)
   {
     // Indicating that esp32 is waiting for a player
-    tripleLight(LED_BUILTIN1, LED_BUILTIN7, LED_BUILTIN13);
-    tripleLight(LED_BUILTIN2, LED_BUILTIN8, LED_BUILTIN14);
-    tripleLight(LED_BUILTIN3, LED_BUILTIN9, LED_BUILTIN15);
-    tripleLight(LED_BUILTIN4, LED_BUILTIN10, LED_BUILTIN16);
-    tripleLight(LED_BUILTIN5, LED_BUILTIN11, LED_BUILTIN17);
-    tripleLight(LED_BUILTIN6, LED_BUILTIN12, LED_BUILTIN18);
-    tripleLight(LED_BUILTIN5, LED_BUILTIN11, LED_BUILTIN17);
-    tripleLight(LED_BUILTIN4, LED_BUILTIN10, LED_BUILTIN16);
-    tripleLight(LED_BUILTIN3, LED_BUILTIN9, LED_BUILTIN15);
-    tripleLight(LED_BUILTIN2, LED_BUILTIN8, LED_BUILTIN14);
+    digitalWrite(LED_BUILTIN2, HIGH);
+    digitalWrite(LED_BUILTIN6, HIGH);
+    digitalWrite(LED_BUILTIN10, HIGH);
+    digitalWrite(LED_BUILTIN14, HIGH);
+    digitalWrite(LED_BUILTIN18, HIGH);
   }
 
   handleInput();
 
   player2Input = "";
-}
-
-void tripleLight(int led1, int led2, int led3)
-{
-  if(!running)
-  {
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-    digitalWrite(led3, HIGH);
-    delay(200);
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
-    digitalWrite(led3, LOW);
-  }
-  else
-  {
-    turnOffAll();
-    handleInput();
-  }
 }
 
 void handleInput()
@@ -221,61 +213,101 @@ void handleInput()
 
 void handleControl(unsigned long value) {
   // Handle the commands
-  if(running)
+  switch (value) {
+    case 0xFFA25D:              // Receive the Power Button, exit game
+      endGame();
+      client.publish(topic, "Q");
+      break;
+  }
+
+  if(running && ourTurn)
   {
-    switch (value) {
-      case 0xFFA25D:              // Receive the Power Button, exit game
-        Serial.println("Pressed the Power Button");
-        running = false;
-        turnOffAll();
-        break;
-    }
 
     switch (value) {
       case 0xFF30CF:              // Receive the number '1'
-        digitalWrite(LED_BUILTIN1, HIGH);
-        Serial.println("Pressed 1");
+        checkTile(LED_BUILTIN1, 1);
         break;
       case 0xFF18E7:              // Receive the number '2'
-        digitalWrite(LED_BUILTIN3, HIGH);
-        Serial.println("Pressed 2");
+        checkTile(LED_BUILTIN3, 2);
         break;
       case 0xFF7A85:              // Receive the number '3'
-        digitalWrite(LED_BUILTIN5, HIGH);
-        Serial.println("Pressed 3");
+        checkTile(LED_BUILTIN5, 3);
         break;
       case 0xFF10EF:              // Receive the number '4'
-        digitalWrite(LED_BUILTIN7, HIGH);
-        Serial.println("Pressed 4");
+        checkTile(LED_BUILTIN7, 4);
         break;
-      case 0xFF38C7:              // Receive the number '2'
-        digitalWrite(LED_BUILTIN9, HIGH);
-        Serial.println("Pressed 5");
+      case 0xFF38C7:              // Receive the number '5'
+        checkTile(LED_BUILTIN9, 5);
         break;
-      case 0xFF5AA5:              // Receive the number '3'
-        digitalWrite(LED_BUILTIN11, HIGH);
-        Serial.println("Pressed 6");
+      case 0xFF5AA5:              // Receive the number '6'
+        checkTile(LED_BUILTIN11, 6);
         break;
-      case 0xFF42BD:              // Receive the number '1'
-        digitalWrite(LED_BUILTIN13, HIGH);
-        Serial.println("Pressed 7");
+      case 0xFF42BD:              // Receive the number '7'
+        checkTile(LED_BUILTIN13, 7);
         break;
-      case 0xFF4AB5:              // Receive the number '2'
-        digitalWrite(LED_BUILTIN15, HIGH);
-        Serial.println("Pressed 8");
+      case 0xFF4AB5:              // Receive the number '8'
+        checkTile(LED_BUILTIN15, 8);
         break;
-      case 0xFF52AD:              // Receive the number '3'
-        digitalWrite(LED_BUILTIN17, HIGH);
-        Serial.println("Pressed 9");
+      case 0xFF52AD:              // Receive the number '9'
+        checkTile(LED_BUILTIN17, 9);
         break;
     }
   }
 }
 
-void startGame()
+void checkTile(int led, int tileNum)
 {
+  if(tiles[tileNum-1] != '_')
+  {
+    Serial.println("INVALID, TILE ALREADY OCCUPIED");
+  }
+  else
+  {
+    digitalWrite(led, HIGH);
+    ourTurn = false;
+    switch(tileNum)
+    {
+      case 1:
+        client.publish(topic, "11");
+        break;
+      case 2:
+        client.publish(topic, "21");
+        break;
+      case 3:
+        client.publish(topic, "31");
+        break;
+      case 4:
+        client.publish(topic, "41");
+        break;
+      case 5:
+        client.publish(topic, "51");
+        break;
+      case 6:
+        client.publish(topic, "61");
+        break;
+      case 7:
+        client.publish(topic, "71");
+        break;
+      case 8:
+        client.publish(topic, "81");
+        break;
+      case 9:
+        client.publish(topic, "91");
+        break;
+    }
+    tiles[tileNum-1] = 'X';
+  }
+}
+
+void endGame()
+{
+  for(int i = 0; i < 9; i++)
+  {
+    tiles[i] = '_';
+  }
+  running = false;
+  ourTurn = true;
   turnOffAll();
-  running = true;
 }
 
 void turnOffAll()
