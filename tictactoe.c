@@ -148,20 +148,20 @@ int main(int argc, char* argv[])
             MQTTClient_publishMessage(client, TOPIC, &pubmsg, &token);
             rc = MQTTClient_waitForCompletion(client, token, TIMEOUT);
 
-            return 1;
+            return rc;
         }
 
         if(player1Wins)
         {
             printStatus();
             printf("%s\n","Sorry, Player 1 Wins! Try again next time, goodbye~");
-            return 1;
+            return rc;
         }
 
         if(endGame)
         {
             printf("%s\n","Player 1 ended the game... goodbye!");
-            return 1;
+            return rc;
         }
 
         if(!ourTurn)
