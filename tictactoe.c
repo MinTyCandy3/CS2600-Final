@@ -13,9 +13,12 @@
 volatile MQTTClient_deliveryToken deliveredtoken;
 
 void printStatus();
+void checkTile(int tile);
 
 // TICTACTOE VARIABLES
+char input[50]; 
 bool ourTurn = false;
+bool endGame = false;
 char tiles[9] = {'_','_','_',  '_','_','_'  ,'_','_','_'};
 
 void delivered(void *context, MQTTClient_deliveryToken dt)
@@ -57,8 +60,8 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
         {
             case 'q':
             case 'Q':
+                endGame = true;
                 ourTurn = false;
-                exit(1);
                 break;
             case '1':
                 tiles[0] = 'X';
@@ -119,8 +122,6 @@ int main(int argc, char* argv[])
     int rc;
     int ch;
 
-    char input[50]; 
-
     MQTTClient_create(&client, ADDRESS, CLIENTID,
         MQTTCLIENT_PERSISTENCE_NONE, NULL);
     conn_opts.keepAliveInterval = 20;
@@ -149,6 +150,11 @@ int main(int argc, char* argv[])
     MQTTClient_subscribe(client, TOPIC, QOS);
     do
     {
+        if(endGame)
+        {
+            printf("%s\n","Player 1 ended the game... goodbye!");
+        }
+
         if(!ourTurn)
         {
             printStatus();
@@ -157,7 +163,7 @@ int main(int argc, char* argv[])
         else
         {
             printStatus();
-            printf("%s\n","It's your turn!. . . (Press <1-9> or <Q> to Quit)");
+            printf("%s\n","It's your turn!. . . (Press <1-9> or <Q> to Quit))");
         }
         fflush(stdin);
         fgets(input,sizeof(input),stdin);
@@ -168,43 +174,35 @@ int main(int argc, char* argv[])
             {
                 case 'q':
                 case 'Q':
-                    printf("\nEnding game...\n");
+                    printf("\nYou Ended The Game... Goodbye!\n");
+                    endGame = true;
                     break;
                 case '1':
-                    tiles[0] = 'O';
-                    ourTurn = false;
+                    checkTile(0);
                     break;
                 case '2':
-                    tiles[1] = 'O';
-                    ourTurn = false;
+                    checkTile(1);
                     break;
                 case '3':
-                    tiles[2] = 'O';
-                    ourTurn = false;
+                    checkTile(2);
                     break;
                 case '4':
-                    tiles[3] = 'O';
-                    ourTurn = false;
+                    checkTile(3);
                     break;
                 case '5':
-                    tiles[4] = 'O';
-                    ourTurn = false;
+                    checkTile(4);
                     break;
                 case '6':
-                    tiles[5] = 'O';
-                    ourTurn = false;
+                    checkTile(5);
                     break;
                 case '7':
-                    tiles[6] = 'O';
-                    ourTurn = false;
+                    checkTile(6);
                     break;
                 case '8':
-                    tiles[7] = 'O';
-                    ourTurn = false;
+                    checkTile(7);
                     break;
                 case '9':
-                    tiles[8] = 'O';
-                    ourTurn = false;
+                    checkTile(8);
                     break;
                 case '\n':
                     break;
@@ -244,4 +242,18 @@ void printStatus()
     printf("+-----------+ \n| %c | %c | %c | \n", tiles[3], tiles[4], tiles[5]);
     printf("+-----------+ \n| %c | %c | %c | \n", tiles[6], tiles[7], tiles[8]);
     printf("+-----------+ \n\n");
+}
+
+void checkTile(int tile)
+{
+    if(tiles[tile] == '_')
+    {
+        tiles[tile] = 'O';
+        ourTurn = false;
+    }
+    else
+    {
+        printf("\nTile is already occupied!\n");
+        input[0] = '0';
+    }
 }
