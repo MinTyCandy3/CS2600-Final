@@ -127,12 +127,17 @@ void callback(char *topic, byte *payload, unsigned int length) {
       break;
   }
 
+  if(!running && input == 'R')
+  {
+    client.publish(topic, "R1");
+  }
+
   if(running && input == 'q' || input == 'Q')
   {
     endGame();
   }
 
-  Serial.printf("PLAYER: %c\n", playerNum);
+  // Serial.printf("PLAYER: %c\n", playerNum);
   if(running && !ourTurn && playerNum == '2')
   {
     ourTurn = true;
