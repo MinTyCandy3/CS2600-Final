@@ -35,10 +35,10 @@ const char *ssid = "NETGEAR20"; // Enter your WiFi name
 const char *password = "elegantpiano135";  // Enter WiFi password
 
 // MQTT Broker
-const char *mqtt_broker = "broker.emqx.io";
+const char *mqtt_broker = "test.mosquitto.org";
 const char *topic = "mint/tictactoe";
-const char *mqtt_username = "emqx";
-const char *mqtt_password = "public";
+// const char *mqtt_username = "emqx";
+// const char *mqtt_password = "public";
 const int mqtt_port = 1883;
 
 WiFiClient espClient;
@@ -91,7 +91,7 @@ void setup() {
       String client_id = "esp32-client-";
       client_id += String(WiFi.macAddress());
       Serial.printf("The client %s connects to the public mqtt broker\n", client_id.c_str());
-      if (client.connect(client_id.c_str(), mqtt_username, mqtt_password)) {
+      if (client.connect(client_id.c_str(), NULL, NULL)) {
           Serial.println("Public emqx mqtt broker connected");
       } else {
           Serial.print("failed with state ");
@@ -211,6 +211,10 @@ void callback(char *topic, byte *payload, unsigned int length) {
     else if(checkWinStatus(tiles[6], tiles[4], tiles[2], 'O'))
     {
       turnOnWinningPattern(LED_BUILTIN14, LED_BUILTIN10, LED_BUILTIN6);
+    }
+    else
+    {
+      checkIfTie();
     }
 
   }
@@ -373,6 +377,10 @@ void checkTile(int led, int tileNum)
       client.publish(topic, "W1");
       turnOnWinningPattern(LED_BUILTIN13, LED_BUILTIN9, LED_BUILTIN5);
     }
+    else
+    {
+      checkIfTie();
+    }
   }
 }
 
@@ -399,6 +407,22 @@ void endGame()
   running = false;
   ourTurn = true;
   turnOffAll();
+}
+
+void checkIfTie()
+{
+    for(int i=0; i<9; i++)
+    {
+        if(tiles[i] == '_')
+        {
+            break;
+        }
+        else if (i == 8)
+        {
+            endGame();
+        }
+    }
+
 }
 
 void turnOnWinningPattern(int led1, int led2, int led3)
