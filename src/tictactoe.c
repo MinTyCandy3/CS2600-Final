@@ -6,7 +6,7 @@
 #define DASHES      "---------------\n"
 #define ADDRESS     "tcp://test.mosquitto.org:1883"
 #define CLIENTID    "Player 2"
-#define TOPIC       "mint/tictactoe"
+#define TOPIC       "minhtran"
 #define PAYLOAD     "y"
 #define QOS         1
 #define TIMEOUT     10000L
@@ -108,7 +108,7 @@ void connlost(void *context, char *cause)
     printf("\nConnection lost\n");
     printf("     cause: %s\n", cause);
 }
-int main(int argc, char* argv[])
+int main2(int argc, char* argv[])
 {
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
