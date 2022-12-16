@@ -78,7 +78,7 @@ input_move() {
         index=${number}-1;
     done
     
-    tiles[${index}]=1;
+    tiles[${index}]="O";
 
     $PUBLISH "${number}2"
 }
