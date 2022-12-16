@@ -151,7 +151,9 @@ listen(){
     done
 }
 
-
-trap ctrl_c INT
-$PUBLISH "y"
-listen
+while(true)
+{
+    trap ctrl_c INT
+    $PUBLISH "y"
+    listen
+}

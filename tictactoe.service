@@ -1,0 +1,11 @@
+[Unit]
+Description=Automates AI Moves on startup
+
+[Service]
+Type=simple
+User=Minh
+ExecStart=/home/Documents/Final/CS2600-Final/tictactoebot.sh
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
