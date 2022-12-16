@@ -1,8 +1,25 @@
+CC = gcc
+MAIN = src/tictactoe.c
 
-all: tictactoe
+ifeq ($(OS), Windows_NT)
+	DELETE = del
+	EXT=.exe
+else 
+	UNAME_S:=$(shell uname -s)
+	ifeq ($(UNAME_S), Darwin)
+		DELETE = rm -f
+		EXT=.out
+	endif
+endif
 
-tictactoe: tictactoe.c
-	gcc tictactoe.c -o tictactoe -lpaho-mqtt3c
+all: program
 
-run: tictactoe
-	./tictactoe
+program:
+
+	$(CC) -o bin/program$(EXT) $(MAIN) -lpaho-mqtt3c
+
+run: bin/program$(EXT)
+	bin/program$(EXT)
+
+clean: 
+	$(DELETE) bin\*$(EXT)
