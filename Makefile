@@ -16,7 +16,7 @@ all: program
 
 program:
 
-	$(CC) -o bin/program$(EXT) $(MAIN) -lpaho-mqtt3c
+	$(CC) $(MAIN) -o bin/program$(EXT) -lpaho-mqtt3c
 
 run: bin/program$(EXT)
 	bin/program$(EXT)
